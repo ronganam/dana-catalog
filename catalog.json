@@ -1,0 +1,90 @@
+{
+ "about": "Dana's add-on catalog (https://github.com/ronganam/dana, docs/addons.md, \"The catalog\"). Each source.ref is a full commit hash: an entry is exactly one version of its add-on; touches (optional) is what that version declares it may touch, shown before installing. Servers read this file from GitHub (DANA_CATALOG_URL); entries that are not valid are skipped, with the reason in their log. Adding or updating an entry: README.md.",
+ "addons": [
+  {
+   "name": "hello",
+   "title": "Hello",
+   "description": "Example addon: greets people in your words, and reminds you who to greet.",
+   "icon": "hand",
+   "author": "Dana",
+   "homepage": "https://github.com/ronganam/dana/tree/master/examples/addons/hello",
+   "tags": [
+    "example"
+   ],
+   "min_dana": "9.0.0",
+   "touches": {
+    "hosts": [],
+    "acts_outside": false,
+    "stores_credentials": false,
+    "reads": []
+   },
+   "source": {
+    "repo": "https://github.com/ronganam/dana",
+    "path": "examples/addons/hello",
+    "ref": "2841637e4b90cac67b1c845c80b32277eda28e54"
+   }
+  },
+  {
+   "name": "israel_rail",
+   "title": "Israel Railways",
+   "description": "Train times and live delays in chat and voice, your commute on Now, and alerts when a watched train is late.",
+   "icon": "train-front",
+   "author": "ronganam",
+   "homepage": "https://github.com/ronganam/dana-addon-israel-rail",
+   "tags": [
+    "transport",
+    "israel"
+   ],
+   "min_dana": "10.0.0",
+   "touches": {
+    "hosts": [
+     "rail-api.rail.co.il"
+    ],
+    "acts_outside": false,
+    "stores_credentials": false,
+    "reads": []
+   },
+   "source": {
+    "repo": "https://github.com/ronganam/dana-addon-israel-rail",
+    "path": "israel_rail",
+    "ref": "cb31cadde4272509fca307ae623cac1787baa21d"
+   }
+  },
+  {
+   "name": "money_il",
+   "title": "Money (Israel)",
+   "description": "Israeli banks and cards, Psagot Trade and the Pluxee meal card for Money, synced by a bank worker next to Dana.",
+   "icon": "landmark",
+   "author": "ronganam",
+   "homepage": "https://github.com/ronganam/dana-addon-money-il",
+   "tags": [
+    "money",
+    "israel"
+   ],
+   "min_dana": "10.0.0",
+   "touches": {
+    "hosts": [
+     "bankhapoalim.co.il",
+     "cal-online.co.il",
+     "trade.psagot.co.il",
+     "trade1.psagot.co.il",
+     "consumers.pluxee.co.il",
+     "api.consumers.pluxee.co.il",
+     "edge.boi.gov.il",
+     "vertexaisearch.cloud.google.com",
+     "the pages a price check you ask for found"
+    ],
+    "acts_outside": false,
+    "stores_credentials": true,
+    "reads": [
+     "money"
+    ]
+   },
+   "source": {
+    "repo": "https://github.com/ronganam/dana-addon-money-il",
+    "path": "money_il",
+    "ref": "3ac563811a1875b04256ae05bc45ac122bf53834"
+   }
+  }
+ ]
+}

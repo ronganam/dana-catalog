@@ -1,0 +1,106 @@
+name: Check entries
+
+# Every pull request: the catalog parses the way Dana reads it, and each added or changed
+# entry's add-on, at the exact commit the entry pins, passes `bin/dana addons check` and its
+# own tests against Dana's harness, and declares the touches the entry shows.
+
+on:
+  pull_request:
+    paths:
+      - 'catalog.json'
+      - 'scripts/**'
+      - '.github/workflows/check.yml'
+
+permissions:
+  contents: read
+
+env:
+  # The Dana commit entries are checked against. Bump it (a full commit hash) when Dana's
+  # add-on framework changes, in a pull request of its own.
+  DANA_REPO: ronganam/dana
+  DANA_REF: 51ee85c20fcbc0ea9f6a546f05b28e0e042aea34
+
+jobs:
+  entries:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.changed.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DANA_REPO }}
+          ref: ${{ env.DANA_REF }}
+          path: dana
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: dana/server/requirements.txt
+      - run: pip install -r dana/server/requirements.txt
+      - name: The catalog parses as Dana reads it
+        working-directory: dana/server
+        run: |
+          python - <<'PY'
+          import json, sys
+          from core.addons import catalog
+          read = catalog.parse(json.load(open("../../catalog.json", encoding="utf-8")), "catalog.json")
+          for p in read.problems:
+              print(f"::error file=catalog.json::{p}")
+          print(f"{len(read.entries)} valid entries, {len(read.problems)} skipped")
+          sys.exit(1 if read.problems else 0)
+          PY
+      - id: changed
+        name: Entries this pull request adds or changes
+        run: echo "changed=$(python scripts/changed_entries.py origin/${{ github.base_ref }})" >> "$GITHUB_OUTPUT"
+
+  addon:
+    needs: entries
+    if: needs.entries.outputs.changed != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        entry: ${{ fromJSON(needs.entries.outputs.changed) }}
+    name: ${{ matrix.entry.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.DANA_REPO }}
+          ref: ${{ env.DANA_REF }}
+          path: dana
+      - name: The add-on at the pinned commit
+        env:
+          REPO: ${{ matrix.entry.source.repo }}
+          REF: ${{ matrix.entry.source.ref }}
+        run: |
+          git init -q addon-src
+          git -C addon-src fetch -q --depth 1 "$REPO" "$REF"
+          git -C addon-src checkout -q FETCH_HEAD
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: dana/server/requirements.txt
+      - run: pip install -r dana/server/requirements.txt
+      - name: bin/dana addons check
+        env:
+          ADDON_PATH: ${{ matrix.entry.source.path }}
+        run: |
+          dir="$GITHUB_WORKSPACE/addon-src/${ADDON_PATH:-.}"
+          echo "ADDON_DIR=$dir" >> "$GITHUB_ENV"
+          set +e
+          python dana/server/bin/dana addons check "$dir"
+          python dana/server/bin/dana addons check "$dir" --json > check.json
+          true
+      - name: The entry matches the add-on
+        env:
+          ENTRY: ${{ toJSON(matrix.entry) }}
+        run: python scripts/verify_entry.py check.json
+      - name: bin/dana addons test
+        env:
+          DANA_HOME: ${{ github.workspace }}/dana
+        run: python dana/server/bin/dana addons test "$ADDON_DIR"
