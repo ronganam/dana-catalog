@@ -18,7 +18,7 @@ env:
   # The Dana commit entries are checked against. Bump it (a full commit hash) when Dana's
   # add-on framework changes, in a pull request of its own.
   DANA_REPO: ronganam/dana
-  DANA_REF: a1d12f951b1e9c2e572ea9730b4b3ea5a4348c4e
+  DANA_REF: 5b6b0bee1dd79b0d5ff29ccf63ff11456c78a341
 
 jobs:
   entries:
